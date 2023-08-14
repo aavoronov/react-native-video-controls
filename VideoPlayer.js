@@ -31,8 +31,6 @@ export default class VideoPlayer extends Component {
     volume: 1,
     title: '',
     rate: 1,
-    showTimeRemaining: true,
-    showHours: false,
   };
 
   constructor(props) {
@@ -49,12 +47,12 @@ export default class VideoPlayer extends Component {
       muted: this.props.muted,
       volume: this.props.volume,
       rate: this.props.rate,
+      thumbnailUri: this.props.thumbnailUri,
       // Controls
 
       isFullscreen:
         this.props.isFullScreen || this.props.resizeMode === 'cover' || false,
-      showTimeRemaining: this.props.showTimeRemaining,
-      showHours: this.props.showHours,
+      showTimeRemaining: true,
       volumeTrackWidth: 0,
       volumeFillWidth: 0,
       seekerFillWidth: 0,
@@ -158,10 +156,11 @@ export default class VideoPlayer extends Component {
     this.styles = {
       videoStyle: this.props.videoStyle || {},
       containerStyle: this.props.style || {},
+      thumbnailStyle: this.props.thumbnailStyle || {},
     };
   }
 
-  componentDidUpdate = prevProps => {
+  componentDidUpdate = (prevProps) => {
     const {isFullscreen} = this.props;
 
     if (prevProps.isFullscreen !== isFullscreen) {
@@ -188,7 +187,9 @@ export default class VideoPlayer extends Component {
   _onLoadStart() {
     let state = this.state;
     state.loading = true;
-    this.loadAnimation();
+    if (!this.state.thumbnailUri) {
+      this.loadAnimation();
+    }
     this.setState(state);
 
     if (typeof this.props.onLoadStart === 'function') {
@@ -565,22 +566,10 @@ export default class VideoPlayer extends Component {
     const symbol = this.state.showRemainingTime ? '-' : '';
     time = Math.min(Math.max(time, 0), this.state.duration);
 
-    if (!this.state.showHours) {
-      const formattedMinutes = padStart(Math.floor(time / 60).toFixed(0), 2, 0);
-      const formattedSeconds = padStart(Math.floor(time % 60).toFixed(0), 2, 0);
-
-      return `${symbol}${formattedMinutes}:${formattedSeconds}`;
-    }
-
-    const formattedHours = padStart(Math.floor(time / 3600).toFixed(0), 2, 0);
-    const formattedMinutes = padStart(
-      (Math.floor(time / 60) % 60).toFixed(0),
-      2,
-      0,
-    );
+    const formattedMinutes = padStart(Math.floor(time / 60).toFixed(0), 2, 0);
     const formattedSeconds = padStart(Math.floor(time % 60).toFixed(0), 2, 0);
 
-    return `${symbol}${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+    return `${symbol}${formattedMinutes}:${formattedSeconds}`;
   }
 
   /**
@@ -652,6 +641,7 @@ export default class VideoPlayer extends Component {
     let state = this.state;
     state.currentTime = time;
     this.player.ref.seek(time);
+    console.log('seek');
     this.setState(state);
   }
 
@@ -752,6 +742,9 @@ export default class VideoPlayer extends Component {
 
     if (this.styles.containerStyle !== nextProps.style) {
       this.styles.containerStyle = nextProps.style;
+    }
+    if (this.styles.thumbnailStyle !== nextProps.style) {
+      this.styles.thumbnailStyle = nextProps.style;
     }
   }
 
@@ -989,10 +982,24 @@ export default class VideoPlayer extends Component {
    */
   renderBack() {
     return this.renderControl(
-      <Image
-        source={require('./assets/img/back.png')}
-        style={styles.controls.back}
-      />,
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        {this.state.isFullscreen ? (
+          <Text
+            style={{
+              color: 'white',
+              marginLeft: 5,
+              fontFamily: this.props.fontFamily,
+              fontSize: 22,
+            }}>
+            {this.props.header}
+          </Text>
+        ) : (
+          <Image
+            source={require('./assets/img/back.png')}
+            style={styles.controls.back}
+          />
+        )}
+      </View>,
       this.events.onBack,
       styles.controls.back,
     );
@@ -1087,7 +1094,7 @@ export default class VideoPlayer extends Component {
         {...this.player.seekPanResponder.panHandlers}>
         <View
           style={styles.seekbar.track}
-          onLayout={event =>
+          onLayout={(event) =>
             (this.player.seekerWidth = event.nativeEvent.layout.width)
           }
           pointerEvents={'none'}>
@@ -1167,6 +1174,16 @@ export default class VideoPlayer extends Component {
    */
   renderLoader() {
     if (this.state.loading) {
+      if (this.state.thumbnailUri) {
+        return (
+          <View style={styles.loader.container}>
+            <Image
+              source={{uri: this.state.thumbnailUri}}
+              style={[this.styles.thumbnailStyle]}
+            />
+          </View>
+        );
+      }
       return (
         <View style={styles.loader.container}>
           <Animated.Image
@@ -1217,7 +1234,7 @@ export default class VideoPlayer extends Component {
         <View style={[styles.player.container, this.styles.containerStyle]}>
           <Video
             {...this.props}
-            ref={videoPlayer => (this.player.ref = videoPlayer)}
+            ref={(videoPlayer) => (this.player.ref = videoPlayer)}
             resizeMode={this.state.resizeMode}
             volume={this.state.volume}
             paused={this.state.paused}

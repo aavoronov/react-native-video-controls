@@ -1,21 +1,21 @@
+import padStart from 'lodash/padStart';
 import React, {Component} from 'react';
-import Video from 'react-native-video';
 import {
-  TouchableWithoutFeedback,
-  TouchableHighlight,
-  ImageBackground,
-  PanResponder,
-  StyleSheet,
   Animated,
-  SafeAreaView,
+  BackHandler,
   Easing,
   Image,
-  View,
+  ImageBackground,
+  PanResponder,
+  SafeAreaView,
+  StyleSheet,
   Text,
+  TouchableHighlight,
+  TouchableOpacity,
+  View,
+  Dimensions,
 } from 'react-native';
-import padStart from 'lodash/padStart';
-import {TouchableOpacity} from 'react-native';
-import {BackHandler} from 'react-native';
+import Video from 'react-native-video';
 
 export default class VideoPlayer extends Component {
   static defaultProps = {
@@ -53,7 +53,7 @@ export default class VideoPlayer extends Component {
       // Controls
 
       isFullscreen:
-        this.props.isFullScreen || this.props.resizeMode === 'cover' || false,
+        this.props.isFullscreen || this.props.resizeMode === 'cover' || false,
       showTimeRemaining: true,
       volumeTrackWidth: 0,
       volumeFillWidth: 0,
@@ -212,11 +212,12 @@ export default class VideoPlayer extends Component {
 
     state.duration = data.duration;
     state.loading = false;
-
     const screenWidth = this.props.screenWidth;
     const resizeFactor = data.naturalSize.width / screenWidth;
 
     state.height = data.naturalSize.height / resizeFactor;
+    // this.height = data.naturalSize.height / resizeFactor
+
     this.setState(state);
 
     if (state.showControls) {
@@ -491,7 +492,6 @@ export default class VideoPlayer extends Component {
    */
   _toggleFullscreen() {
     let state = this.state;
-
     state.isFullscreen = !state.isFullscreen;
 
     if (this.props.toggleResizeModeOnFullscreen) {
@@ -1176,12 +1176,20 @@ export default class VideoPlayer extends Component {
             alignItems: 'center',
             justifyContent: 'center',
             paddingLeft: this.state.paused ? 5 : 0,
+            // marginBottom: 32
           },
         ]}>
         <Image source={source} />
       </Animated.View>,
       this.methods.togglePlayPause,
-      styles.controls.playPause,
+      {
+        ...styles.controls.playPause,
+        top: this.state.isFullscreen
+          ? Dimensions.get('window').height / 2 - 32
+          : this.state.height
+          ? this.state.height / 2 - 32
+          : 60 - 32,
+      },
     );
   }
 
@@ -1438,11 +1446,14 @@ const styles = {
       paddingRight: 20,
     },
     playPause: {
-      position: 'relative',
+      // position: 'relative',
       width: 64,
       height: 64,
-      zIndex: 0,
+      // zIndex: 0,
+      zIndex: 1000000,
       alignSelf: 'center',
+      position: 'absolute',
+
       // bottom: 0
     },
     title: {

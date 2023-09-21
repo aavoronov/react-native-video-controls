@@ -17,16 +17,6 @@ import {
 } from 'react-native';
 import Video from 'react-native-video';
 
-const Container = ({children, style, hasBeenStarted, thumbnailUri}) => {
-  return hasBeenStarted ? (
-    <View style={style}>{children}</View>
-  ) : (
-    <ImageBackground source={{uri: thumbnailUri}} style={style}>
-      {children}
-    </ImageBackground>
-  );
-};
-
 export default class VideoPlayer extends Component {
   static defaultProps = {
     toggleResizeModeOnFullscreen: true,
@@ -60,7 +50,6 @@ export default class VideoPlayer extends Component {
       volume: this.props.volume,
       rate: this.props.rate,
       thumbnailUri: this.props.thumbnailUri,
-      hasBeenStarted: false,
       // Controls
 
       isFullscreen:
@@ -526,7 +515,6 @@ export default class VideoPlayer extends Component {
   _togglePlayPause() {
     let state = this.state;
     state.paused = !state.paused;
-    state.hasBeenStarted = true;
 
     if (state.paused) {
       typeof this.events.onPause === 'function' && this.events.onPause();
@@ -1299,14 +1287,13 @@ export default class VideoPlayer extends Component {
   render() {
     return (
       <TouchableOpacity activeOpacity={1} onPress={this.events.onScreenTouch}>
-        <Container
+        <ImageBackground
+          source={{uri: this.props.thumbnailUri}}
           style={[
             styles.player.container,
             this.styles.containerStyle,
             {height: this.state.isFullscreen ? '100%' : this.state.height},
-          ]}
-          hasBeenStarted={this.state.hasBeenStarted}
-          thumbnailUri={this.props.thumbnailUri}>
+          ]}>
           <Video
             {...this.props}
             ref={(videoPlayer) => (this.player.ref = videoPlayer)}
@@ -1329,7 +1316,7 @@ export default class VideoPlayer extends Component {
           {this.renderTopControls()}
           {this.renderPlayPause()}
           {this.renderBottomControls()}
-        </Container>
+        </ImageBackground>
       </TouchableOpacity>
     );
   }
@@ -1344,7 +1331,7 @@ const styles = {
   player: StyleSheet.create({
     container: {
       overflow: 'hidden',
-      backgroundColor: '#000',
+      backgroundColor: '#F2F3F8',
       // flex: 1,
       alignSelf: 'stretch',
       justifyContent: 'flex-end',

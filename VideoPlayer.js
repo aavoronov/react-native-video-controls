@@ -37,7 +37,7 @@ export default class VideoPlayer extends Component {
     resizeMode: 'contain',
     isFullscreen: false,
     showOnStart: true,
-    paused: false,
+    paused: true,
     repeat: false,
     muted: false,
     volume: 1,
@@ -55,12 +55,11 @@ export default class VideoPlayer extends Component {
     this.state = {
       // Video
       resizeMode: this.props.resizeMode,
-      paused: this.props.paused,
+      paused: true,
       muted: this.props.muted,
       volume: this.props.volume,
       rate: this.props.rate,
       thumbnailUri: this.props.thumbnailUri,
-      hasBeenStarted: false,
       // Controls
 
       isFullscreen:
@@ -75,10 +74,10 @@ export default class VideoPlayer extends Component {
       volumeOffset: 0,
       seekerOffset: 0,
       seeking: false,
-      originallyPaused: false,
+      originallyPaused: true,
       scrubbing: false,
       loading: false,
-      currentTime: 0,
+      currentTime: this.props.currentTime,
       error: false,
       duration: 0,
     };
@@ -175,13 +174,12 @@ export default class VideoPlayer extends Component {
   }
 
   componentDidUpdate = (prevProps) => {
-    const {isFullscreen} = this.props;
-
-    if (prevProps.isFullscreen !== isFullscreen) {
-      this.setState({
-        isFullscreen,
-      });
-    }
+    // const {isFullscreen} = this.props;
+    // if (prevProps.isFullscreen !== isFullscreen) {
+    //   this.setState({
+    //     isFullscreen,
+    //   });
+    // }
   };
   /**
     | -------------------------------------------------------
@@ -235,6 +233,9 @@ export default class VideoPlayer extends Component {
       this.setControlTimeout();
     }
 
+    this.seekTo(this.props.currentTime);
+    this.setSeekerPosition(this.calculateSeekerPosition());
+
     if (typeof this.props.onLoad === 'function') {
       this.props.onLoad(...arguments);
     }
@@ -259,7 +260,8 @@ export default class VideoPlayer extends Component {
       if (typeof this.props.onProgress === 'function') {
         this.props.onProgress(...arguments);
       }
-
+      // this.props.setCurrentTime(data.currentTime)
+      console.log('data.currentTime', data.currentTime);
       this.setState(state);
     }
   }
@@ -516,7 +518,9 @@ export default class VideoPlayer extends Component {
       typeof this.events.onExitFullscreen === 'function' &&
         this.events.onExitFullscreen();
     }
-
+    // this.seekTo(this.state.currentTime)
+    this.props.setCurrentTime(this.state.currentTime);
+    console.log(this.state.currentTime);
     this.setState(state);
   }
 
@@ -526,7 +530,7 @@ export default class VideoPlayer extends Component {
   _togglePlayPause() {
     let state = this.state;
     state.paused = !state.paused;
-    state.hasBeenStarted = true;
+    this.props.setHasBeenStarted(true);
 
     if (state.paused) {
       typeof this.events.onPause === 'function' && this.events.onPause();
@@ -1305,7 +1309,7 @@ export default class VideoPlayer extends Component {
             this.styles.containerStyle,
             {height: this.state.isFullscreen ? '100%' : this.state.height},
           ]}
-          hasBeenStarted={this.state.hasBeenStarted}
+          hasBeenStarted={this.props.hasBeenStarted}
           thumbnailUri={this.props.thumbnailUri}>
           <Video
             {...this.props}

@@ -261,7 +261,6 @@ export default class VideoPlayer extends Component {
         this.props.onProgress(...arguments);
       }
       // this.props.setCurrentTime(data.currentTime)
-      console.log('data.currentTime', data.currentTime);
       this.setState(state);
     }
   }
@@ -519,8 +518,8 @@ export default class VideoPlayer extends Component {
         this.events.onExitFullscreen();
     }
     // this.seekTo(this.state.currentTime)
+    this.props.setHasBeenStarted(true);
     this.props.setCurrentTime(this.state.currentTime);
-    console.log(this.state.currentTime);
     this.setState(state);
   }
 
